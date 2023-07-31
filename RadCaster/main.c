@@ -9,11 +9,12 @@
 #include <stdlib.h>
 #include <GLUT/GLUT.h>
 #include <math.h>
+#include <SOIL/SOIL.h>
 #define PI 3.1415926535
 #define PI2 PI/2
 #define PI3 3*PI/2
 #define DR 0.0174533
-
+GLuint textureID; 
 // these are the coordinates of our player
 float px,py,pdx,pdy,pa;
 
@@ -48,20 +49,48 @@ int map[]= {
   1,1,1,1,1,1,1,1,
 };
 
-void drawMap2D(){
-    int x,y,x0,y0;
-    for(y=0;y<mapY;y++){
-        for(x=0;x<mapX;x++){
-            if(map[y*mapX+x]==1) {glColor3f(1, 1, 1);} else{glColor3f(0, 0, 0);}
-            x0=x*mapS; y0= y*mapS;
-            glBegin(GL_QUADS);
-            glVertex2i(x0+1, y0+1);
-            glVertex2i(x0+1, y0+mapS-1);
-            glVertex2i(x0+mapS-1, y0+mapS-1);
-            glVertex2i(x0+mapS-1, y0+1);
-            glEnd();
+void drawMap2D() {
+    int x, y, x0, y0;
+    glEnable(GL_TEXTURE_2D);
+
+    for (y = 0; y < mapY; y++) {
+        for (x = 0; x < mapX; x++) {
+            if (map[y * mapX + x] == 1) {
+                // Calculate the screen coordinates of the current rectangle
+                x0 = x * mapS;
+                y0 = y * mapS;
+
+                // Load the local image "texture.jpg" as a texture
+                if (textureID == 0) {
+                    textureID = SOIL_load_OGL_texture(
+                        "texture.jpg", SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID,
+                        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y
+                    );
+
+                    if (textureID == 0) {
+                        printf("Error loading texture.\n");
+                        return;
+                    }
+                }
+
+                glBindTexture(GL_TEXTURE_2D, textureID);
+
+                // Enable texturing and bind the loaded texture
+                glBegin(GL_QUADS);
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2i(x0 + 1, y0 + 1);
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2i(x0 + 1, y0 + mapS - 1);
+                glTexCoord2f(1.0f, 1.0f);
+                glVertex2i(x0 + mapS - 1, y0 + mapS - 1);
+                glTexCoord2f(0.0f, 1.0f);
+                glVertex2i(x0 + mapS - 1, y0 + 1);
+                glEnd();
+            }
         }
     }
+
+    glDisable(GL_TEXTURE_2D);
 }
 
 float dist(float ax, float ay, float bx, float by, float ang) {
